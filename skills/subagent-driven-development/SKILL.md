@@ -244,12 +244,20 @@ and is re-read on every later turn. Hand artifacts over as files.
 short timeouts, and never sit in one silent, open-ended wait either.
 While you have local work — ledger updates, packaging the next review,
 reading reports — keep working; child results arrive on their own.
-When you are genuinely idle, wait in bounded stretches (five to ten
+When you are genuinely idle, wait in bounded stretches (fifteen to thirty
 minutes, where your platform allows), and between stretches post one
 line of status and reconcile your live children: list them, and chase
 any that finished without reporting. A bounded stretch keeps nearly
 all of a long wait's efficiency while guaranteeing a stuck or lost
 child is noticed within minutes, not at the end of the session.
+
+**Interruption guard:** A wait timeout is not evidence that a child is
+stuck. Never call `send_input` with `interrupt: true` solely because a
+wait timed out, the child has been quiet, or a heuristic elapsed-time
+threshold was reached. Use `interrupt: false` (or omit it) for progress
+or status messages so the child can continue. Interrupt only for explicit
+user cancellation, a safety issue, a confirmed scope violation, or
+concrete repeated evidence that the child is stuck or invalid.
 
 ### 1. Dispatch the implementer
 

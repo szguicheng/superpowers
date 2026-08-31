@@ -47,8 +47,8 @@ two-thirds of all wait calls were short polls that timed out.
   child's final answer is pushed into your mailbox and arrives with
   your next turn.
 - When you are genuinely idle with children outstanding, wait in
-  bounded stretches: `wait_agent` with `timeout_ms` 300000-600000
-  (5-10 minutes). After each stretch — wake or timeout — post one
+  bounded stretches: `wait_agent` with `timeout_ms` 900000-1800000
+  (15-30 minutes). After each stretch — wake or timeout — post one
   status line, run `list_agents`, and chase any child that finished
   without reporting. Never stack polls shorter than five minutes; the
   event subscription wakes a bounded stretch just as fast as a short
@@ -57,6 +57,16 @@ two-thirds of all wait calls were short polls that timed out.
   without triggering a turn); covering that idle window is
   `wait_agent`'s only job. A stretch that times out with no activity
   is your cue to reconcile, not to shorten the next stretch.
+
+### Child interruption guard
+
+A wait timeout is not evidence that a child is stuck. Never call
+`send_input` with `interrupt: true` solely because a wait timed out, the
+child has been quiet, or a heuristic elapsed-time threshold was reached.
+Use `interrupt: false` (or omit it) for progress or status messages so
+the child can continue. Interrupt only for explicit user cancellation, a
+safety issue, a confirmed scope violation, or concrete repeated evidence
+that the child is stuck or invalid.
 
 ## Model routing on spawns
 
