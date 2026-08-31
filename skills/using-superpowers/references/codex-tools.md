@@ -14,13 +14,12 @@ preset selects (current presets run V2; older ones run V1). Trust your
 actual tool list over any table — including this one — when they
 disagree.
 
-- **Spawning:** give children a clean context with
-  `spawn_agent {fork_turns: "none"}`; the default `"all"` copies your
-  entire transcript into the child. On Codex 0.145+, role files under
-  `~/.codex/agents/` attach to isolated forks via `agent_type`.
-  Full-history forks accept `model` and `reasoning_effort` overrides
-  (only `agent_type` is refused there) — isolated forks are the SDD
-  default for context hygiene, not because overrides require them.
+- **Spawning:** use the exact `spawn_agent` schema exposed in the current
+  tool list. Multi-agent versions use different argument names; current V1
+  uses `fork_context`, while names such as `fork_turns`, `agent_type`, and
+  `followup_task` belong to other runtimes and must not be copied blindly.
+  When the user configured agent defaults, omit `model` and
+  `reasoning_effort` unless an explicit per-child override was requested.
 - **Fix rounds:** resume the implementer with `followup_task` — it
   delivers your message, triggers a turn, and transparently reloads a
   child the harness evicted. Never dispatch a fresh implementer on the
@@ -61,21 +60,24 @@ two-thirds of all wait calls were short polls that timed out.
 
 ## Model routing on spawns
 
-Every `spawn_agent` you issue — including when you are yourself a
-spawned child running a fan-out — sets `model` AND `reasoning_effort`
-explicitly, per the Model Selection rules of the skill you are
-executing. Setting `model` alone is a trap: the child's effort
-silently resets to that model's default, not to yours.
+Treat the user's `[agents]` settings in `~/.codex/config.toml` as the
+default routing policy. For ordinary child dispatches, omit both `model`
+and `reasoning_effort` so the current Codex runtime can resolve the
+configured defaults. Do not choose `high`, `xhigh`, or another effort from
+the role or task complexity alone.
 
-Ask your human partner to add a machine-level backstop to
-`~/.codex/config.toml` so any spawn that slips through still routes to
-a deliberate tier instead of silently inheriting the session's most
-expensive model:
+Pass an explicit model or reasoning effort only when the user requests a
+per-child override or the task contract explicitly requires one. When an
+explicit override is needed and the current tool accepts both fields, set
+the model and effort as a deliberate pair. An explicit call argument wins
+over the configured default; the default is not a hard lock.
+
+The intended machine-level configuration can be expressed as:
 
 ```toml
 [agents]
-default_subagent_model = "<a mid-tier model from your spawn allowlist>"
-default_subagent_reasoning_effort = "medium"
+default_subagent_model = "gpt-5.6-luna"
+default_subagent_reasoning_effort = "max"
 ```
 
 ## Environment Detection

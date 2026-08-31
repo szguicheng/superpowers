@@ -183,7 +183,13 @@ implementation.
 
 ## Model Selection
 
-Use the least powerful model that can handle each role to conserve cost and increase speed.
+Use the least powerful model that can handle each role to conserve cost and increase speed, subject to the user's configured agent defaults.
+
+**Configured user defaults take precedence:** If
+`[agents].default_subagent_model` is configured, omit `model` from ordinary
+dispatches and let the runtime use that default. Only choose a different
+model when the user explicitly requests a per-child override or no user
+default is configured.
 
 **Mechanical implementation tasks** (isolated functions, clear specs, 1-2 files): use a fast, cheap model. Most implementation tasks are mechanical when the plan is well-specified.
 
@@ -201,9 +207,11 @@ small fix diffs take a cheap-to-mid tier.
 **Fix-loop escalation (rounds 4-5)**: use a model at least one tier above
 the implementer that got stuck.
 
-**Always specify the model explicitly when dispatching a subagent.** An
-omitted model inherits your session's model — often the most capable and
-most expensive — which silently defeats this section.
+**Reasoning effort follows the configured default:** Omit
+`reasoning_effort` from ordinary `spawn_agent` calls. Do not infer
+`high`, `xhigh`, or another effort from the role rubric. Pass an explicit
+effort only for a user-requested or task-contract-required override; an
+explicit per-call value wins over `[agents].default_subagent_reasoning_effort`.
 
 **Turn count beats token price.** Wall-clock and context cost scale with how
 many turns a subagent takes, and the cheapest models routinely take 2-3× the
